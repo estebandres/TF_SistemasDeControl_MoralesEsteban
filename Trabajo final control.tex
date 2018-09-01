@@ -62,46 +62,148 @@
 \tableofcontents
 \newpage
 \section{Descripción del problema}
-En el prsente trabajo se realizo un sistema de control automatico para regular la intensidad luminica en una habitacion. 
-El sistema estara compuesto por un actuador (microcontrolador Arduino, PIC, etc.) y un driver (Dimmer, Trimer, Triac). Con esto se regulara la potencia que se le proporcione al sistema de iluminacion, para este trabajo se considera una lampara incandescente. Se usara un sensor LDR (Light Diode Resistense) de luminosidad para receptar la iluminacion proporcionada por la lampara y en base al valor medido se acutara en consecuencia para variar la potencia del sistema luminico. 
-Se debe mencionar que el sistema debera ser capaz de soportar perturbaciones exteriores, como ser la apertura de ventanas o alguna sombra que pueda producirse por distinatas causas, que pueden provenir por el paso de una persona, o de nubes. 
+En el prsente trabajo se describirá el proceso de desarrollo de un sistema de control automático para regular la intensidad luminica en una habitáculo.
+En un enfoque inicial se plantea un sistema de lazo abierto conformado por 4 componentes principales
+\begin{itemize}
+	\item Potenciómetro (Resistencia Variable)
+	\item Arduino UNO
+	\item Circuito Dimmer (Corte Alterna)
+	\item Lámpara de filamento incandescente
+\end{itemize}
+
+\begin{figure}[H] % Example image
+	\center{\includegraphics[width=0.9\linewidth]{remake/esquema_ilustrativo.png}}
+	\caption{Esquema ilustrativo.}
+	\label{fig:esquema_ilustra}
+\end{figure} 
+
+En una instancia posterior se incorporará al diseño original un sensor LDR (Light Diode Resistense) de luminosidad para medir el nivel de iluminacion proporcionado por la lampara y de esta manera ofrecer un punto de retroalimentación al sistema inicial. 
+\\
+Se debe mencionar que el sistema deberá ser capáz de soportar perturbaciones exteriores, como ser la apertura de ventanas o alguna sombra que pueda producirse por distinatas causas, que pueden provenir por el paso de una persona, o de nubes.
+
+%TODO revisar valores. Me parece que la determinación del rango de control se realiza en la etapa de analisi temporal en lazo abierto
 La entrada del sistema sera 0V a 10V, que se relacionaran con la salida de forma lineal. El rango de salida del sistema sera de 0lm a 1000lm. Se seleciconara una entrada deseada, por ej 8V al que le corresponde una salida de 800lm, y el sistema debera ser capaz de mantener la salida correspondiente, a pesar de las perturbaciones consideradas.
-\section{Diseño del Modelo}
-  \subsection{Diagrama de Bloques Inicial}
-  De la interpretación semántica del problema se produjo un esquema inicial del sistema, a continuación el diagrama de bloques:
-  \begin{figure}[H] % Example image
-	\center{\includegraphics[width=0.7\linewidth]{diagrama1}}
-	\caption{Diagrama de Bloques inicial.}
-	\label{fig:diagrama1}
-	\end{figure} 
-\section{Modelo Matemático}
-\subsection{Entrada}
-La entrada consistira en una señal escalon de voltaje, comprendida entre los 0V y los 10V, que representara la intensidad deseada a la salida del sistema.
-\subsection{Actuador}
-De acuerdo a la señal de voltaje que reciba, esta sera de 0V a 10V, determinara el nivel de voltaje que debera entregar al Driver, este nivel de salida estara entre 0V y 5V.
-Debido a que el tiempo de respuesta de un microcontrolador es significativamente mas rapido respecto al resto de los tiemos de los componentes del sistema, no sera tenido en cuenta. La funcion de transferencia de este bloque resulta:
-$$FT_{Actuador}=\frac{\frac{5[v]}{10[v]}}{1}$$
-$$FT_{Actuador}=0,5$$
-\subsection{Driver}
-En este bloque se recibira la señal del actuador, de 0V a 5V, y de acuerdo a ésta se regulara la tension proporcionada a la lampara, de 0V a 220V. La relacion entre la salida y la entrada se la considerara lineal. Para determinar la constante de tiempo $\tau$, se  calcula el 63\% de 220V, que es la salida maxima del bloque, el resultado es 138,6V. Dividiendo este valor por 1 milisegundo, se obtiene $\tau= 0.1386$.
-La funcion de transferencia del bloque resulta:
-$$FT_{Driver}=\frac{\frac{220[v]}{5[v]}}{1+0,1386*s}=\frac{44}{0,1386(s+7,2)}$$
-$$FT_{Driver}=\frac{317,4}{s+7,2}$$
-\subsection{Lámpara(Planta)}
-La salida del bloque estara medida en lumenes, el rango de salida es de 0 lm a 1000 lm, siendo esta variacion lineal respecto a la señal de entrada al bloque, la cual varia de 0V a 220V. Como constante de tiempo  $\tau$, se tomara un tiempo estimado de 10 ms. Debido a que la iluminacion es practicamente instantanea, se considera este tiempo teniendo en cuenta el calentamiento que debe producirse en el filamento de la lampara para la emision de luz. 
-La funcion de transferencia del bloque resulta:
-$$FT_{Planta}=\frac{\frac{1000[lm]}{220[v]}}{1+0,01*s}=\frac{4.5}{0,01(s+100)}$$
-$$FT_{Planta}=\frac{450}{s+100}$$
-\subsection{Sensor de Luz(LDR)}
-EL sensor recibira como entrada la luz del ambiente, que puede variar de 0lm a 1000lm, de acuerdo a ésta tendra una salida lineal de 0V a 10V. Debido a que la respuesta del sensor es muy rapida se introducira un filtro, para evitar variaciones fugaces de luz, que establezca una constante de tiempo  $\tau$ de 1 segundo.
-$$FT_{Sensor}=\frac{\frac{10[v]}{1000[lm]}}{1+1*s}$$
-$$FT_{Sensor}=\frac{0,01}{s+1}$$
-Luego de calcular las funciones de transferencia, se tiene el siguiente diagrama de bloques:
-  \begin{figure}[H] % Example image
-	\center{\includegraphics[width=0.7\linewidth]{diagrama2}}
-	\caption{Diagrama de bloques con las funciones de transferencia.}
-	\label{fig:diagrama2}
-	\end{figure} 
+
+\subsection{Potenciómetro}
+Una resistencia variable utilizada a modo de divisor de tensión permitirá fijar un nivel de control.
+\begin{figure}[H] % Example image
+	\center{\includegraphics[width=0.3\linewidth]{remake/pote_divisor.png}}
+	\caption{Esquema circuito potenciometro.}
+	\label{fig:potenciometro}
+\end{figure} 
+
+\subsection{Arduino Uno}
+Una placa de prototipado digital que incluye un microcontrolador de la marca Atmel ATmega328 será utilizada para medir la señal de ajuste del potenciómetro y permitirá generar las señales de control para el circuito de dimmerización.\\
+El microcontrolador funciona por defecto a una velocidad de reloj de 16Mhz lo que se traduce en un tiempo de ejecución de instrucción de aproximadamente 25 ns.\\
+Utilizando la librería en C oficial de arduino se consiguen lecturas del ADC cada 100 us y lecturas digitales con una demora de 5 us en promedio por lo que deberán contemplarse dichas demoras en el análisis de las respuestas temporales de cada bloque si fuesen significativas.
+
+\subsection{Dimmer}
+Circuito electrónico capaz de detectar cruzes por cero de una señal alterna para los que generará una señal de niveles digitales y corta duración preparada para ser medida.\\
+Al mismo tiempo el circuito ofrece una etapa de recorte de la señal alterna de entrada mediante el empleo de un TRIAC.\\
+A continuación se muestra un esquema ilustrativo del circuito a ser empleado.
+
+\begin{figure}[H] % Example image
+	\center{\includegraphics[width=0.8\linewidth]{remake/001__circuito_dimmer.jpg}}
+	\caption{Esquema circuito dimmer.}
+	\label{fig:dimmer}
+\end{figure} 
+ 
+ El efecto de la polarización de la compuerta del TRIAC T1 produce una deformación o corte de la señal alterna original. Tal efecto puede observarse en la forma de onda percibida por la lámpara.
+ 
+ \begin{figure}[H] % Example image
+ 	\center{\includegraphics[width=0.7\linewidth]{remake/003__gate_chopped.png}}
+ 	\caption{Principio de acción sobre la señal original.}
+ 	\label{fig:gate_chopped}
+ \end{figure} 
+ 
+\begin{figure}[H] % Example image
+	\center{\includegraphics[width=0.7\linewidth]{remake/004__chopped_examples.png}}
+	\caption{Ejemplos de deformación de la señal original.}
+	\label{fig:chopped_examples}
+\end{figure} 
+ 
+ Como puede observarse de la acción de dimmerización la señal deformada cambia con los rertrasos introducidos por los componentes del circuito de dimmer.\\
+ Los valores relevantes para este caso se toman en consideración:
+
+\begin{itemize}
+	\item Índice de conmutación TRIAC: 20 V/us
+	\item Retardo por excitación de compuerta: 2 us
+\end{itemize}
+
+\textbf{PEOR ESCENARIO}
+$$\widehat{V}_{RED} = 311v$$
+$$t_{CONM} = \frac{1}{20}\frac{\mu s}{v}\times 311v$$
+$$t_{CONM} = 15,55\mu s$$
+$$t_{TOTAL} = 2\mu s + 15,55\mu s$$
+$$t_{TOTAL} = 17,55\mu s$$
+
+Sin embargo los efectos del cambio de $V_{RMS}$ aparente se verán completos una vez que termine el ciclo de alterna
+
+$$F_{RED}=50Hz$$
+$$T_{RED}=20\mu s$$
+
+\subsection{Lámpara}
+El diseño planteado sólo funcionará para lámaparas de filamento incandescente.
+Según las especificaciones ofrecidas por OSRAM.
+Para alcanzar el 90\% de la iluminación tabulada se requerirá un $t_{REAC}=250ms$
+Si se supone la respuesta exponencial entonces 
+
+\begin{align*}
+& 90~\text{\small \% } \,\rule[2.5pt]{16pt}{0.5pt}\,
+20~\text{\small ms}\\
+& 63,2~\text{\small \%} \,\rule[2.5pt]{16pt}{0.5pt}\,
+~\text{\small $\tau$}
+\end{align*}
+$$\tau = 175,5ms$$
+
+\section{Planteo Inicial: Sistema sin Realimentación}
+Teniendo en cuenta las consideraciones anteriores puede reducirse el planteo del sistema con el siguiente diagrama de bloques.
+
+\begin{figure}[H] % Example image
+	\center{\includegraphics[width=0.7\linewidth]{remake/005__sistema_sin_retro.png}}
+	\caption{Planteo sistema sin realimentación.}
+	\label{fig:sistema_sin_retro}
+\end{figure} 
+Para convertir el esquema en un sistema de control automático es necasario incorporar un componente de retroalimentación, un detector de errores o comparador.
+
+\begin{figure}[H] % Example image
+	\center{\includegraphics[width=0.7\linewidth]{remake/006__sistema_con_retro.png}}
+	\caption{Planteo sistema con realimentación.}
+	\label{fig:sistema_con_retro}
+\end{figure} 
+\subsection{Sensor}
+Como componente de lazo de feedback se eligió una Light Dependant Resistance (LDR) configurada en una maya con divisor de tensión es posible conseguir un rango de voltages adecuados.
+
+La respuesta de tiempos de reacción de este dispositivo es asimétrica, esto es para el escenario que contempla la transición LUZ $\rightarrow$ OSCURIDAD TOTAL la variación de la resistencia es inversamente exponencial.
+En este caso según la documentación del fabricante el tiempo que tarda en alcanzar el máximo valor para la resistencia interna es de 78ms entonces:
+\begin{align*}
+& 100~\text{\small \% } \,\rule[2.5pt]{16pt}{0.5pt}\,
+78~\text{\small ms}\\
+& 63,2~\text{\small \%} \,\rule[2.5pt]{16pt}{0.5pt}\,
+~\text{\small $\tau$}
+\end{align*}
+$$\tau = 50ms$$
+
+El caso inverso atiende el escenario OSCURIDAD TOTAL $\rightarrow$ LUZ la respuesta de la variación de resistencia interna es más que exponencial con una reducción a 0 en menos de 8ms.
+
+Por esta razón se contempla solo el retardo anterior.
+
+\subsection{Funciones de Transferencia}
+\subsubsection{ACTUADOR}
+$$FT_{Actuador} =\frac{\frac{OUTPUT_{MAX}}{INPUT_{MAX}}}{1+\tau_{BLOQUE}\times s}$$
+$$=\frac{\frac{220}{10}}{1+0,02 s}=\frac{22}{1+0,02 s}=\frac{22}{0,02(50+s)}$$
+$$FT_{Actuador} = \frac{1100}{s+50}$$
+
+\subsubsection{PLANTA}
+$$FT_{Planta} =\frac{\frac{OUTPUT_{MAX}}{INPUT_{MAX}}}{1+\tau_{BLOQUE}\times s}$$
+$$=\frac{\frac{1000}{220}}{1+0,2 s}=\frac{4,54}{1+0,02 s}=\frac{4,54}{0,2(5+s)}= \frac{22,7}{s+5}$$
+$$FT_{Planta} = \frac{23}{s+5}$$
+
+\subsubsection{SENSOR}
+$$FT_{Sensor} =\frac{\frac{OUTPUT_{MAX}}{INPUT_{MAX}}}{1+\tau_{BLOQUE}\times s}$$
+$$=\frac{\frac{10}{1000}}{1+0,05 s}=\frac{0,01}{1+0,05 s}=\frac{0,01}{0,05(20+s)}$$
+$$FT_{Actuador} = \frac{0,2}{s+20}$$
+
 \section{Funcion de Transferencia de Lazo Abierto}
 Utilizando las funciones de transferencia previamente calculadas, se obtiene la funcion de transferencia de lazo abierto del sistema:
 $$FT_{LA}=FT_{Actuador} \times FT_{Driver} \times FT_{Planta} \times FT_{Sensor} $$
