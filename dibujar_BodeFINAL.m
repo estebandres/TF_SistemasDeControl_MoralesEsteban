@@ -1,8 +1,9 @@
-function dibujar_Bode(sys_A,sys_B,W)
+function dibujar_Bode_final(sys_A,sys_B,W)
 %
 %
 %sys1 = tf([1],[0.001386 0.15 1.149 1])
 %sys2 = tf([2.59 2.72],[0.001386 0.1559 1.794 5.939 4.3 0])
+
 
 formato='%0.2f';
 [mag_A fase_A] = bode(sys_A,W);
@@ -40,7 +41,7 @@ fase_cor_B=interp1(W,fase_B,Wcf_B)
 subplot(2,1,1)
 %set(axes_handle,'YLim',[-20 Inf]);
 
-semilogx(W,mag_A(:,:),'b--','LineWidth',2);hold on; grid on
+semilogx(W,mag_A(:,:),'b','LineWidth',1.5);hold on; grid on
 
 %axis([-inf inf -20 inf])
 plot(ceros_A,val_ceros_A,'bo','MarkerSize',14,'LineWidth',2);
@@ -53,7 +54,7 @@ if(any(polos_A==0))
 end
 plot(Wcg_A,mag_cor_A,'co','MarkerSize',10,'LineWidth',2);
 
-semilogx(W,mag_B(:,:),'r','LineWidth',2); grid on
+semilogx(W,mag_B(:,:),'r','LineWidth',1.5); grid on
 
 plot(ceros_B,val_ceros_B,'ro','MarkerSize',10,'LineWidth',2);
 if(any(ceros_B==0))
@@ -71,20 +72,23 @@ y_limites=get(gca,'YLim');
 
 plot(x_limites,[0 0],'k','LineWidth',1);
 
+plot([Wcg_A Wcg_A],y_limites,'c--','LineWidth',2);
+plot([Wcg_B Wcg_B],y_limites,'g--','LineWidth',2);
+
 txstr(1) = {'\bf\color{blue}-- \it\color{black}No Compensado'};
 txstr(2) = {'\bf\color{red}-- \it\color{black}Compensado'};
-txstr(3) = {'\bf\color{cyan}o \it\color{black}Margen Ganancia no comp.'};
-txstr(4) = {'\bf\color{green}o \it\color{black}Margen Ganancia comp.'};
-text(x_limites(2),y_limites(2),txstr,'HorizontalAlignment','right','VerticalAlignment','Top')
+txstr(3) = {strcat('\bf\color{cyan}o \it\color{black}Mgn_{NO COMP}= ',num2str(mag2db(Mgan_A),formato))};
+txstr(4) = {strcat('\bf\color{green}o \it\color{black}Mgn_{COMP}= ',num2str(mag2db(Mgan_B),formato))};
+text(x_limites(2)-40,y_limites(2)-10,txstr,'HorizontalAlignment','right','VerticalAlignment','Top','EdgeColor','red','BackgroundColor','white')
 
-
+title('\bfDIAGRAMA DE BODE');
 hold off;
 %semilogx(x,y);hold off
 
-%################################## #######################################%
+%#########################################################################%
 
 subplot(2,1,2)
-semilogx(W,fase_A(:,:),'b--','LineWidth',2);hold on; grid on
+semilogx(W,fase_A(:,:),'b','LineWidth',1.5);hold on; grid on
 plot(ceros_A,val_ceros_A,'bo','MarkerSize',14,'LineWidth',2);
 if(any(ceros_A==0))
     plot(W(1),0,'bo','MarkerSize',14,'LineWidth',2,'MarkerFaceColor','b');
@@ -95,7 +99,7 @@ if(any(polos_A==0))
 end
 plot(Wcf_A,fase_cor_A,'ko','MarkerSize',10,'LineWidth',2);
 
-semilogx(W,fase_B(:,:),'r','LineWidth',2);grid on
+semilogx(W,fase_B(:,:),'r','LineWidth',1.5);grid on
 plot(ceros_B,val_ceros_B,'ro','MarkerSize',10,'LineWidth',2);
 if(any(ceros_B==0))
     plot(W(1),0,'ro','MarkerSize',10,'LineWidth',2,'MarkerFaceColor','r');
@@ -109,9 +113,21 @@ plot(Wcf_B,fase_cor_B,'mo','MarkerSize',10,'LineWidth',2);
 x_limites=get(gca,'XLim');
 y_limites=get(gca,'YLim');
 
-plot(x_limites,[0 0],'k','LineWidth',1);
+plot(x_limites,[-180 -180],'k','LineWidth',1);
+
+plot([Wcf_A Wcf_A],y_limites,'k--','LineWidth',2);
+plot([Wcf_B Wcf_B],y_limites,'m--','LineWidth',2);
+
+txstr(1) = {'\bf\color{blue}-- \it\color{black}No Compensado'};
+txstr(2) = {'\bf\color{red}-- \it\color{black}Compensado'};
+txstr(3) = {strcat('\bf\color{black}o \it\color{black}Mfase_{NO COMP}= ',num2str(Mfase_A,formato))};
+txstr(4) = {strcat('\bf\color{magenta}o \it\color{black}Mfase_{COMP}= ',num2str(Mfase_B,formato))};
+text(x_limites(2)-40,y_limites(2)-15,txstr,'HorizontalAlignment','right','VerticalAlignment','Top','EdgeColor','red','BackgroundColor','white')
+
 
 hold off;
+
+print('autoExample', '-dpng', '-r300');
 %semilogx(x,y);hold off
 
 %tf2ss()
